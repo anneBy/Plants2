@@ -13,7 +13,8 @@ namespace Plants2.Models
         [Required]
         [StringLength(50)]
         [Index("IX_Name", 1, IsUnique = true)]
-        [Remote("IsPlantInDB", "Plants", ErrorMessage = "This Plant is already in the Database.")]
+        //[Remote("IsPlantInDB", "Plants", ErrorMessage = "This Plant is already in the Database.")]
+        [Remote("IsPlantInDB", "Plants", AdditionalFields = "PlantID", ErrorMessage = "This Plant is already in the Database.")]
         public string Name { get; set; }
         public int? ParentID { get; set; }
         [StringLength(50)]

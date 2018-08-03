@@ -57,10 +57,6 @@ namespace Plants2.Controllers
                 return HttpNotFound();
             }
 
-            //Plant parent = plant.Parent;
-            //string parName = parent.Name;
-
-            //ViewBag.parentName = parName;
             return View(plant);
         }
 
@@ -113,18 +109,18 @@ namespace Plants2.Controllers
         // GET: Plants/Edit/5
         public ActionResult Edit(int? id)
         {
-            //TODO: hier keine clientseitige unique-pruefung
-            return RedirectToAction("UnderConstruction");
-            //if (id == null)
-            //{
-            //    return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            //}
-            //Plant plant = db.Plants.Find(id);
-            //if (plant == null)
-            //{
-            //    return HttpNotFound();
-            //}
-            //return View(plant);
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Plant plant = db.Plants.Find(id);
+            if (plant == null)
+            {
+                return HttpNotFound();
+            }
+
+            ViewBag.ParentID = new SelectList(db.Plants, "PlantID", "Name", plant.ParentID);    // (items, data value field, data text field, selected value)
+            return View(plant);
         }
 
         // POST: Plants/Edit/5
@@ -140,7 +136,6 @@ namespace Plants2.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.ParentID = new SelectList(db.Plants, "PlantID", "Name", plant.ParentID);
             return View(plant);
         }
 
@@ -185,10 +180,11 @@ namespace Plants2.Controllers
             base.Dispose(disposing);
         }
 
-        public JsonResult IsPlantInDB(string Name)
+        public JsonResult IsPlantInDB(string Name, int? PlantID)
         {
-            //check if any of the Plant Names in db matches the Name specified in the Parameter using the ANY extension method.  
-            return Json(!db.Plants.Any(x => x.Name == Name), JsonRequestBehavior.AllowGet);
+            //check if any of the Plant Names in db matches the Name specified in the Parameter using the ANY extension method. 
+            //PlantID check to allow edit 
+            return Json(!db.Plants.Any(x => x.Name == Name && x.PlantID != PlantID), JsonRequestBehavior.AllowGet);
         }
     }
 }

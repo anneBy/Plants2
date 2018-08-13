@@ -15,33 +15,17 @@ namespace Plants2.Controllers
         private Plant2DBContext db = new Plant2DBContext();
 
         // GET: Plants
-        public ActionResult Index(string hLevelName, string searchString)
+        public ActionResult Index(string searchString)
         {
-            var LevelLst = new List<string>();
-
-            var LevelQry = from d in db.Plants
-                           orderby d.HLevelName
-                           select d.HLevelName;
-
-            LevelLst.AddRange(LevelQry.Distinct());
-            ViewBag.hLevelName = new SelectList(LevelLst);
-
-            var plants = from p in db.Plants
-                         select p;
+            var plants = db.Plants.Include(p => p.Parent).Include(p => p.Commonnames);
 
             if (!String.IsNullOrEmpty(searchString))
             {
-                plants = plants.Where(s => s.Name.Contains(searchString));
-            }
-
-            if (!string.IsNullOrEmpty(hLevelName))
-            {
-                plants = plants.Where(x => x.HLevelName == hLevelName);
+                plants = plants.Where(p => p.Name.Contains(searchString));
             }
 
             plants = plants.OrderBy(p => p.Name);
-
-            return View(plants);
+            return View(plants.ToList());
         }
 
         // GET: Plants/Details/5
@@ -56,25 +40,14 @@ namespace Plants2.Controllers
             {
                 return HttpNotFound();
             }
-
             return View(plant);
         }
 
         // GET: Plants/Create
         public ActionResult Create()
         {
-            var ParentLst = new List<string>();
-
-            var ParentQry = from p in db.Plants
-                            orderby p.Name
-                            select p.Name;
-
-            ParentLst.AddRange(ParentQry);
-            ViewBag.parentNameList = new SelectList(ParentLst);
-
-            var plant = new Plant();
-
-            return View(plant);
+            ViewBag.ParentID = new SelectList(db.Plants, "PlantID", "Name");
+            return View();
         }
 
         // POST: Plants/Create
@@ -82,19 +55,8 @@ namespace Plants2.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "PlantID,Name,ParentID,HLevelName")] Plant plant, string parentNameList)
+        public ActionResult Create([Bind(Include = "PlantID,Name,ParentID,HLevelName,NativTo")] Plant plant)
         {
-            if (!string.IsNullOrEmpty(parentNameList))
-            {
-                var plntIdQuery =
-                    (from p in db.Plants
-                     where p.Name == parentNameList
-                     select new { p.PlantID }).Single(); // .Single() is like executeScalar(), Sequence must not contain more than one element, otherwise exception is trown.
-
-                int id = plntIdQuery.PlantID;
-                plant.ParentID = id;
-            }
-
             if (ModelState.IsValid)
             {
                 db.Plants.Add(plant);
@@ -113,13 +75,17 @@ namespace Plants2.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Plant plant = db.Plants.Find(id);
+
+            Plant plant = db.Plants
+              .Include(p => p.Commonnames)
+              .SingleOrDefault(x => x.PlantID == id);
+
             if (plant == null)
             {
                 return HttpNotFound();
             }
-
-            ViewBag.ParentID = new SelectList(db.Plants, "PlantID", "Name", plant.ParentID);    // (items, data value field, data text field, selected value)
+            ViewBag.ParentID = new SelectList(db.Plants, "PlantID", "Name", plant.ParentID);
+            ViewBag.CommonNms = new SelectList(plant.Commonnames, "CommID", "CommName");
             return View(plant);
         }
 
@@ -128,7 +94,7 @@ namespace Plants2.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "PlantID,Name,ParentID,HLevelName")] Plant plant)
+        public ActionResult Edit([Bind(Include = "PlantID,Name,ParentID,HLevelName,NativTo")] Plant plant)
         {
             if (ModelState.IsValid)
             {
@@ -136,7 +102,110 @@ namespace Plants2.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
+            ViewBag.ParentID = new SelectList(db.Plants, "PlantID", "Name", plant.ParentID);
             return View(plant);
+        }
+
+        // GET: Partial View Plants/AddCommonname
+        public PartialViewResult AddCommonname(string plId)
+        {
+            int pid = -1;
+            string message = "";
+            Plant plant = new Plant();
+            List<Commonname> allExceptPlantsCn = new List<Commonname>();
+
+            if (int.TryParse(plId, out pid))
+            {
+                plant = db.Plants
+               .Include(p => p.Commonnames)
+               .SingleOrDefault(x => x.PlantID == pid);
+
+                if (plant != null)
+                {
+                    allExceptPlantsCn = db.Commonnames.OrderBy(c => c.CommName).ToList().Except(plant.Commonnames.ToList()).ToList();
+                }
+                else
+                {
+                    plant = new Plant();
+                    message = "Sorry, could not find requested Plant.";
+                }
+            }
+            else
+            {
+                message = "Sorry, error while parsing requested Plant.";
+            }
+
+            ViewBag.AllCommonNms = new SelectList(allExceptPlantsCn, "CommID", "CommName");
+            ViewBag.Message = message;
+            return PartialView("AddCommonname", plant);
+        }
+
+        public ActionResult addCommName(string commId, string plantId)
+        {
+            int cid = 0, pid = 0;
+            Plant plant = null;
+            List<Commonname> addedCommName = new List<Commonname>();
+
+            if (int.TryParse(plantId, out pid))
+            {
+                plant = db.Plants.Include("Commonnames")
+                    .Where(p => p.PlantID == pid)
+                    .FirstOrDefault<Plant>();
+            }
+            else
+            {
+                return HttpNotFound();
+            }
+            if (int.TryParse(commId, out cid))
+            {
+                addedCommName = db.Commonnames.Where(c => c.CommID == cid).ToList();
+            }
+            else
+            {
+                return HttpNotFound();
+            }
+
+            foreach (Commonname c in addedCommName)
+            {
+                if (db.Entry(plant).State == EntityState.Detached)
+                    db.Commonnames.Attach(c);
+                plant.Commonnames.Add(c);
+            }
+            db.SaveChanges();
+
+            return RedirectToAction("Edit", new { id = pid });
+        }
+
+        public ActionResult removeCommName(string commId, string plantId)
+        {
+            int cid = 0, pid = 0;
+            Plant plant = null;
+            List<Commonname> deletedCommNames = new List<Commonname>();
+
+            if (int.TryParse(plantId, out pid))
+            {
+                plant = db.Plants.Include("Commonnames")
+                    .Where(p => p.PlantID == pid)
+                    .FirstOrDefault<Plant>();
+            }
+            else
+            {
+                return HttpNotFound();
+            }
+            if (int.TryParse(commId, out cid))
+            {
+                deletedCommNames = plant.Commonnames.Except(plant.Commonnames
+                    .Where(t => t.CommID != cid)).ToList();
+            }
+            else
+            {
+                return HttpNotFound();
+            }
+
+            deletedCommNames.ForEach(c => plant.Commonnames.Remove(c));
+            db.SaveChanges();
+
+            return RedirectToAction("Edit", new { id = pid });
         }
 
         // GET: Plants/Delete/5
@@ -165,12 +234,6 @@ namespace Plants2.Controllers
             return RedirectToAction("Index");
         }
 
-        // GET: Plants/UnderConstruction
-        public ActionResult UnderConstruction()
-        {
-            return View();
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -178,13 +241,6 @@ namespace Plants2.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
-        }
-
-        public JsonResult IsPlantInDB(string Name, int? PlantID)
-        {
-            //check if any of the Plant Names in db matches the Name specified in the Parameter using the ANY extension method. 
-            //PlantID check to allow edit 
-            return Json(!db.Plants.Any(x => x.Name == Name && x.PlantID != PlantID), JsonRequestBehavior.AllowGet);
         }
     }
 }

@@ -12,8 +12,7 @@
     <hr />
     <dl class="dl-horizontal">
         <dt>
-            @*@Html.DisplayNameFor(model => model.Parent.Name)*@
-            @Html.Label("Parent")
+            @Html.DisplayNameFor(model => model.Parent.Name)
         </dt>
 
         <dd>
@@ -34,6 +33,14 @@
 
         <dd>
             @Html.DisplayFor(model => model.HLevelName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NativTo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NativTo)
         </dd>
 
     </dl>

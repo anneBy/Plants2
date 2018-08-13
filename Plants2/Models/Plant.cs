@@ -14,18 +14,21 @@ namespace Plants2.Models
         [StringLength(50)]
         [Index("IX_Name", 1, IsUnique = true)]
         //[Remote("IsPlantInDB", "Plants", ErrorMessage = "This Plant is already in the Database.")]
-        [Remote("IsPlantInDB", "Plants", AdditionalFields = "PlantID", ErrorMessage = "This Plant is already in the Database.")]
+        //[Remote("IsPlantInDB", "Plants", AdditionalFields = "PlantID", ErrorMessage = "This Plant is already in the Database.")]
         public string Name { get; set; }
         public int? ParentID { get; set; }
         [StringLength(50)]
         [Display(Name = "Level")]
         public string HLevelName { get; set; }
+        [StringLength(50)]
+        public string NativTo { get; set; }
         [ForeignKey("ParentID")]
         public virtual Plant Parent { get; set; }
         public virtual ICollection<Plant> Childs { get; set; }
+        public virtual ICollection<Commonname> Commonnames { get; set; }
     }
 
-    public class Plant2DBContext : DbContext
+    public partial class Plant2DBContext : DbContext
     {
         public DbSet<Plant> Plants { get; set; }
     }

@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Plants2.Models.Commonname>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.CommName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Language)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.CommName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Language)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.CommID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.CommID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.CommID })
+        </td>
+    </tr>
+}
+
+</table>

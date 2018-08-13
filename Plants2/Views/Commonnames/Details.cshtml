@@ -1,0 +1,34 @@
+﻿@model Plants2.Models.Commonname
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Commonname</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.CommName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CommName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Language)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Language)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.CommID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

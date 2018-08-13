@@ -1,0 +1,17 @@
+﻿@{
+    ViewBag.Title = "Add Common Name To Plant";
+}
+
+<h2>Add Commonname to: </h2>
+@ViewBag.Message
+
+@using (Html.BeginForm())
+{
+    <div class="form-group">
+        @Model.Name
+        <div class="col-md-10">
+            @Html.ListBox("AllCommonNms", null, new { id = "AllCommNms", @onchange = "AddCommNm(this.value)" })
+        </div>
+    </div>
+}
+

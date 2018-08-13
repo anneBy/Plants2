@@ -1,0 +1,64 @@
+﻿@model IEnumerable<Plants2.Models.Plant>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+    @using (Html.BeginForm("Index", "Plants", FormMethod.Get))
+    {
+    <p>
+        Name: @Html.TextBox("SearchString")
+        <input type="submit" value="Filter" />
+    </p>
+    }
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayName("Parent")
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.HLevelName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.NativTo)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Commonnames)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Parent.Name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.HLevelName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.NativTo)
+        </td>
+        <td>
+            @Html.ListBox("CommId", new SelectList(item.Commonnames, "CommID", "CommName"))
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.PlantID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.PlantID }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.PlantID })
+        </td>
+    </tr>
+}
+
+</table>

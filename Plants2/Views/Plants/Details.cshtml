@@ -1,0 +1,51 @@
+﻿@model Plants2.Models.Plant
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Plant</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @*@Html.DisplayNameFor(model => model.Parent.Name)*@
+            @Html.DisplayName("Parent")
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Parent.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.HLevelName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.HLevelName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NativTo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NativTo)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.PlantID }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

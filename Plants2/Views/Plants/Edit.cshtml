@@ -1,0 +1,184 @@
+﻿@model Plants2.Models.Plant
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+<h2>Edit</h2>
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>Plant</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.PlantID)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.ParentID, "ParentID", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownList("ParentID", null, htmlAttributes: new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.ParentID, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.HLevelName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.HLevelName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.HLevelName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.NativTo, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.NativTo, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.NativTo, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Commonnames, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.ListBox("CommonNms", null, new { id = "testId2", @class = "form-control", @onchange = "addCommRow(this.value)", @onmouseenter = "showHint()", @onmouseleave = "hideHint()" })
+                @Html.ValidationMessageFor(model => model.Commonnames, "", new { @class = "text - danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <table id="Hint"></table>
+                <table id="Remove" cellspacing="3"></table>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input id="addCommNmButton" type="button" value="Add Common Name" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+<div style="display:none" id="addCommnmDialog" />
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script type="text/javascript" src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.11.4.min.js"></script>
+    <link href="~/Content/themes/base/all.css" rel="stylesheet" />
+
+    @*remove common name:*@
+    <script>
+        var show = true;
+        var html = '';
+        var txt = '';
+        var passId = "-1";
+        function showHint() {
+            if (show) {
+                txt = '<tr>' +
+                            '<td>Please select item to remove</td>' +
+                            '</tr>'
+                $(txt).appendTo($("#Hint"));
+            }
+        }
+        function hideHint() {
+            $("#Hint").empty();
+        }
+        function addCommRow(id) {
+            passId = id;
+            var html = '<tr>' +
+                        '<td>Remove selected common name?</td>' +
+                        '<td><input type="button" id="BtnRem" value="Yes" /></td>' +
+                        '<td><input type="button" id="BtnNo" value="No" /></td>' +
+                        '</tr>'
+            if (show) {
+                $("#Hint").empty();
+                $(html).appendTo($("#Remove"));
+                show = false;
+            }
+        };
+        $("#Remove").on("click", "#BtnNo", no);
+        $("#Remove").on("click", "#BtnRem", rem);
+        function no() {
+            var par = $(this).closest('TR')
+            par.remove();
+            show = true;
+        };
+        function rem() {
+            var par = $(this).closest('TR')
+            par.remove();
+            show = true;
+            RemFromDB()
+        };
+        function RemFromDB() {
+            window.location.href = "/Plants/removeCommName?commId=" + passId + "&plantId=" + @Model.PlantID;
+        }
+    </script>
+
+    @*// "Add Common Name" button*@
+    <script type="text/javascript">
+        $(function () {
+            $("#addCommNmButton").click(function () { AddCommNmDialog(); });
+        });
+
+        function AddCommNmDialog() {
+            var applyButton = {
+                text: "OK",
+                click: OKButton
+            }
+            var cancelButton = {
+                text: "Cancel",
+                click: CloseDialog
+            }
+            function OKButton() {
+                window.location.href = "/Plants/addCommName?commId=" + selectedCommName + "&plantId=" + @Model.PlantID;
+                CloseDialog();
+            }
+            function CloseDialog() {
+                $("#addCommnmDialog").dialog("close");
+            }
+
+            var plId = @Model.PlantID;
+            $.get("/Plants/AddCommonname/",
+            { plId: plId },
+            function (AddCommonname) {
+                $("#addCommnmDialog").html(AddCommonname);
+                // ... code to open the dialog:
+                $("#addCommnmDialog").dialog({
+                    buttons: [applyButton, cancelButton],
+                    height: 500,
+                    width: 500,
+                    modal: true,
+                    title: "Add Common Name"
+                });
+            });
+        }
+        var selectedCommName = "-1";
+        function AddCommNm(id)
+        {
+            selectedCommName = id;
+        }
+    </script>
+}
